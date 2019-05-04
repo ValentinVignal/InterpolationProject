@@ -89,15 +89,17 @@ def main():
     loss_tab = []
 
     # Train
+    print('Start training')
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         for i in range(args.epochs):
             _, loss_value = sess.run([train_op, loss], feed_dict={x: x_train, y: y_train})
             loss_tab.append(loss_value)
             if i % args.log_interval == 0:
-                print("Loss : {0}".format(loss_value))
+                print("Epoch {0} - Loss : {1}".format(i+1, loss_value))
 
         predicted = sess.run([l3], feed_dict={x: x_test})
+    print('Training Done')
 
     x_test = np.reshape(x_test, -1)
     y_test = np.reshape(y_test, -1)
@@ -163,6 +165,7 @@ def main():
     plt.legend()
     plt.savefig(os.path.join(path_save_folder, 'Loss_' + save_name + '.png'))
 
+    print('Datas saved in : {0}'.format(path_save_folder))
 
 if __name__ == '__main__':
     # create a separate main function because original main function is too mainstream
