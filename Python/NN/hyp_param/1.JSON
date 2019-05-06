@@ -1,0 +1,11 @@
+{
+  "name": "small model",
+  "description": "Neural network for testing",
+  "nb_layers" : 2,
+  "layers_size": {
+    "id" : [50, 50],
+    "sin": [50, 50],
+    "cos": [50, 50],
+    "mul": [50, 50]
+  }
+}

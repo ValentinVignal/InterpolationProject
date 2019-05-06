@@ -5,7 +5,8 @@ import librosa as lb
 import argparse
 import os
 import pickle
-
+import json
+from math import ceil
 
 def main():
     """
@@ -20,14 +21,18 @@ def main():
                         help='disables CUDA training')
     parser.add_argument('--seed', type=int, default=1234, metavar='S',
                         help='random seed (default: 1234)')
-    parser.add_argument('--log-interval', type=int, default=10, metavar='N',
-                        help='how many epochs to wait before logging training status')
+    parser.add_argument('--log-interval', type=int, default=100, metavar='N',
+                        help='how many batch to wait before logging training status')
     parser.add_argument('--name', default='',  # Optional, if we want ot name our model
                         help='The name of the model')
     parser.add_argument('--data', type=int, default=1, metavar='N',
                         help='The folder containing the data')
     parser.add_argument('--transition-size', type=int, default=0, metavar='N',
                         help='the size of the transition')
+    parser.add_argument('--model', type=str, default='1',
+                        help='The model of the Neural Network used for the interpolation')
+    parser.add_argument('--batch', type=int, default=2048,
+                        help='The size of the batchs')
 
     args = parser.parse_args()
 
@@ -58,6 +63,27 @@ def main():
     x = tf.placeholder(dtype=tf.float32, shape=[None, 1])
     y = tf.placeholder(dtype=tf.float32, shape=[None, 1])
 
+    # Loading the model from the JSON file
+    json_path = os.path.join('NN', 'hyp_param', args.model + '.JSON')
+    with open(json_path, 'r') as f:
+        model = json.load(f)
+
+    # Creating the layers
+    layers = [x]
+    for i in range(model['nb_layers']):
+        layers.append(
+            tf.concat([
+                tf.layers.dense(layers[-1], model['layers_size']['id'][i], activation=tf.nn.tanh),
+                tf.math.sin(tf.layers.dense(layers[-1], model['layers_size']['sin'][i], activation=None)),
+                tf.math.cos(tf.layers.dense(layers[-1], model['layers_size']['cos'][i], activation=None)),
+                tf.math.multiply(
+                    tf.layers.dense(layers[-1], model['layers_size']['mul'][i], activation=tf.nn.tanh),
+                    tf.layers.dense(layers[-1], model['layers_size']['mul'][i], activation=tf.nn.tanh)
+                )
+            ], axis=1)
+        )
+
+    """
     # First Layer
     l1 = tf.layers.dense(x, 50, activation=tf.nn.relu)
     l1_sin = tf.math.sin(tf.layers.dense(x, 50, activation=None))
@@ -77,28 +103,33 @@ def main():
         tf.layers.dense(l1_final, 50, activation=None)
     )
     l2_final = tf.concat([l2, l2_sin, l2_cos, l2_m], axis=1)
-
+    """
     # Final Layer
-    l3 = tf.layers.dense(l2_final, 1, activation=None)
+    final_layer = tf.layers.dense(layers[-1], 1, activation=tf.nn.tanh)
 
     # Loss function and optimizer
-    loss = tf.reduce_mean(tf.losses.mean_squared_error(labels=y, predictions=l3))
+    loss = tf.reduce_mean(tf.losses.mean_squared_error(labels=y, predictions=final_layer))
     train_op = tf.train.AdamOptimizer(learning_rate=args.lr).minimize(loss)
     tf.set_random_seed(args.seed)
 
     loss_tab = []
+    nb_points = x_train.shape[0]
 
     # Train
     print('Start training')
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         for i in range(args.epochs):
-            _, loss_value = sess.run([train_op, loss], feed_dict={x: x_train, y: y_train})
-            loss_tab.append(loss_value)
-            if i % args.log_interval == 0:
-                print("Epoch {0} - Loss : {1}".format(i+1, loss_value))
+            j = 0
+            for b in range(0, nb_points, args.batch):
+                _, loss_value = sess.run([train_op, loss],
+                                         feed_dict={x: x_train[b: b + args.batch], y: y_train[b:b + args.batch]})
+                loss_tab.append(loss_value)
+                if j % args.log_interval == 0:
+                    print("Epoch {0} [{2}/{3}] -> Loss : {1}".format(i + 1, loss_value, b + args.batch, nb_points))
+                j += 1
 
-        predicted = sess.run([l3], feed_dict={x: x_test})
+        predicted = sess.run([final_layer], feed_dict={x: x_test})
     print('Training Done')
 
     x_test = np.reshape(x_test, -1)
@@ -156,8 +187,10 @@ def main():
     plt.savefig(os.path.join(path_save_folder, 'Prediction_' + save_name + '.png'))
 
     # Plot of prediction
+    nb_batchs = ceil(nb_points/args.batch)
+
     plt.figure()
-    plt.plot(np.arange(1, args.epochs + 1), loss_tab, color='crimson', label='Loss')
+    plt.plot(np.arange(args.epochs * nb_batchs)/nb_batchs, loss_tab, color='crimson', label='Loss')
     plt.xlabel('Epochs')
     plt.ylabel('Value')
     plt.title('Evolution of the value of the Loss function through the Epochs')
