@@ -83,27 +83,6 @@ def main():
             ], axis=1)
         )
 
-    """
-    # First Layer
-    l1 = tf.layers.dense(x, 50, activation=tf.nn.relu)
-    l1_sin = tf.math.sin(tf.layers.dense(x, 50, activation=None))
-    l1_cos = tf.math.cos(tf.layers.dense(x, 50, activation=None))
-    l1_m = tf.math.multiply(
-        tf.layers.dense(x, 50, activation=None),
-        tf.layers.dense(x, 50, activation=None)
-    )
-    l1_final = tf.concat([l1, l1_sin, l1_cos, l1_m], axis=1)
-
-    # Second Layer
-    l2 = tf.layers.dense(l1_final, 50, activation=tf.nn.relu)
-    l2_sin = tf.math.sin(tf.layers.dense(l1_final, 50, activation=None))
-    l2_cos = tf.math.cos(tf.layers.dense(l1_final, 50, activation=None))
-    l2_m = tf.math.multiply(
-        tf.layers.dense(l1_final, 50, activation=None),
-        tf.layers.dense(l1_final, 50, activation=None)
-    )
-    l2_final = tf.concat([l2, l2_sin, l2_cos, l2_m], axis=1)
-    """
     # Final Layer
     final_layer = tf.layers.dense(layers[-1], 1, activation=tf.nn.tanh)
 
@@ -117,7 +96,8 @@ def main():
 
     # Train
     print('Start training')
-    with tf.Session() as sess:
+    use_gpu = (not args.no_cuda) and tf.test.is_gpu_available()
+    with tf.Session(config=tf.ConfigProto(log_device_placement=use_gpu)) as sess:
         sess.run(tf.global_variables_initializer())
         for i in range(args.epochs):
             j = 0
