@@ -97,9 +97,9 @@ def main():
 
     # Train
     print('Start training')
-    use_gpu = (not args.no_cuda) and tf.test.is_gpu_available()
-    print('use gpu bool : {0}'.format(use_gpu))
-    with tf.Session(config=tf.ConfigProto(log_device_placement=use_gpu)) as sess:
+    # use_gpu = (not args.no_cuda) and tf.test.is_gpu_available()
+    # print('use gpu bool : {0}'.format(use_gpu))
+    with tf.Session(config=tf.ConfigProto(log_device_placement=(not args.no_cuda))) as sess:
         sess.run(tf.global_variables_initializer())
         for i in range(args.epochs):
             j = 0
