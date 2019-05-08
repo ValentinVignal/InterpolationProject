@@ -15,7 +15,7 @@ def main():
     parser = argparse.ArgumentParser(description='Program to interpolate functions between 2 waveforms')
     parser.add_argument('--epochs', type=int, default=5, metavar='N',
                         help='number of epochs to train (default: 5)')
-    parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
+    parser.add_argument('--lr', type=float, default=0.00001, metavar='LR',
                         help='learning rate (default: 0.001)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
@@ -31,10 +31,15 @@ def main():
                         help='the size of the transition')
     parser.add_argument('--model', type=str, default='1',
                         help='The model of the Neural Network used for the interpolation')
-    parser.add_argument('--batch', type=int, default=4096,
+    parser.add_argument('--batch', type=int, default=2**16,
                         help='The size of the batchs')
+    parser.add_argument('--small-cpu', action='store_true', default=False,
+                        help='To work on small CPU')
 
     args = parser.parse_args()
+    if args.small_cpu:
+        args.batch = 2048
+        args.no_cuda = True
 
     path_data_folder = '../Data/data_' + args.data
 
@@ -98,9 +103,7 @@ def main():
 
     # Train
     print('Start training')
-    # use_gpu = (not args.no_cuda) and tf.test.is_gpu_available()
-    # print('use gpu bool : {0}'.format(use_gpu))
-    with tf.Session(config=tf.ConfigProto(log_device_placement=(not args.no_cuda))) as sess:
+    with tf.Session(config=tf.ConfigProto()) as sess:
         sess.run(tf.global_variables_initializer())
         for i in range(args.epochs):
             j = 0
