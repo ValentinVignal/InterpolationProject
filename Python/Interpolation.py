@@ -25,18 +25,18 @@ def main():
                         help='how many batch to wait before logging training status')
     parser.add_argument('--name', default='',  # Optional, if we want ot name our model
                         help='The name of the model')
-    parser.add_argument('--data', type=int, default=1, metavar='N',
+    parser.add_argument('--data', type=str, default='1', metavar='N',
                         help='The folder containing the data')
     parser.add_argument('--transition-size', type=int, default=0, metavar='N',
                         help='the size of the transition')
     parser.add_argument('--model', type=str, default='1',
                         help='The model of the Neural Network used for the interpolation')
-    parser.add_argument('--batch', type=int, default=2048,
+    parser.add_argument('--batch', type=int, default=4096,
                         help='The size of the batchs')
 
     args = parser.parse_args()
 
-    path_data_folder = '../Data/data_' + str(args.data)
+    path_data_folder = '../Data/data_' + args.data
 
 
     # The importation of the data
