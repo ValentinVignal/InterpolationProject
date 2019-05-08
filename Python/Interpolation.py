@@ -38,6 +38,7 @@ def main():
 
     path_data_folder = '../Data/data_' + args.data
 
+    tf.device('/device:GPU:0') if not args.no_cuda else None
 
     # The importation of the data
     path1 = os.path.join(path_data_folder, 'part_1.wav')
