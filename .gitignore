@@ -105,3 +105,6 @@ venv.bak/
 
 #PyCharm folder/
 .idea/
+
+# Save folder
+SavedFoler/

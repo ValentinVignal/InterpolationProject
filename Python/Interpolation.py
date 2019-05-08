@@ -38,6 +38,7 @@ def main():
 
     path_data_folder = '../Data/data_' + str(args.data)
 
+
     # The importation of the data
     path1 = os.path.join(path_data_folder, 'part_1.wav')
     path2 = os.path.join(path_data_folder, 'part_2.wav')
@@ -118,19 +119,24 @@ def main():
     predicted = np.reshape(predicted, -1)
 
     ##### Save part #####
+    path_save_folder = '../SavedFolder'
+    path_save_folder_data = os.path.join(path_save_folder, 'data_' + args.data)
+    os.mkdir(path_save_folder) if not os.path.isdir(path_save_folder) else None
+    os.mkdir(path_save_folder_data) if not os.path.isdir(path_save_folder_data) else None
+
 
     # Find name and create folder
     i = 0
     nameStr = args.name if args.name == '' else '_' + args.name
     save_name = 'data_{0}_epoch({1}){2}_({3})'.format(args.data, args.epochs, nameStr, i)
-    while os.path.isdir(os.path.join(path_data_folder, save_name)):
+    while os.path.isdir(os.path.join(path_save_folder_data, save_name)):
         i += 1
         save_name = 'data_{0}_epoch({1}){2}_({3})'.format(args.data, args.epochs, nameStr, i)
-    path_save_folder = os.path.join(path_data_folder, save_name)
-    os.mkdir(path_save_folder)
+    path_to_save_folder = os.path.join(path_save_folder_data, save_name)
+    os.mkdir(path_to_save_folder)
 
     # Save all the informations
-    with open(os.path.join(path_save_folder, save_name + '.p'), 'wb') as dump_file:
+    with open(os.path.join(path_to_save_folder, save_name + '.p'), 'wb') as dump_file:
         pickle.dump({
             'loss': loss_tab,
             'name': args.name,
@@ -165,7 +171,7 @@ def main():
     plt.title('Interpolated function')
     plt.grid()
     plt.legend()
-    plt.savefig(os.path.join(path_save_folder, 'Prediction_' + save_name + '.png'))
+    plt.savefig(os.path.join(path_to_save_folder, 'Prediction_' + save_name + '.png'))
 
     # Plot of prediction
     nb_batchs = ceil(nb_points/args.batch)
@@ -177,9 +183,9 @@ def main():
     plt.title('Evolution of the value of the Loss function through the Epochs')
     plt.grid()
     plt.legend()
-    plt.savefig(os.path.join(path_save_folder, 'Loss_' + save_name + '.png'))
+    plt.savefig(os.path.join(path_to_save_folder, 'Loss_' + save_name + '.png'))
 
-    print('Datas saved in : {0}'.format(path_save_folder))
+    print('Datas saved in : {0}'.format(path_to_save_folder))
 
 if __name__ == '__main__':
     # create a separate main function because original main function is too mainstream
