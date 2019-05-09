@@ -189,7 +189,11 @@ def main():
     plt.legend()
     plt.savefig(os.path.join(path_to_save_folder, 'Loss_' + save_name + '.png'))
 
+    # Save of the .wav file
+    lb.output.write_wav(os.path.join(path_to_save_folder, save_name + '.wav'), np.reshape(y_train, -1), sr1)
+
     print('Datas saved in : {0}'.format(path_to_save_folder))
+
 
 if __name__ == '__main__':
     # create a separate main function because original main function is too mainstream
