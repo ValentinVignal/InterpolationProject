@@ -3,10 +3,10 @@
   "description": "Neural network for big training",
   "nb_layers" : 3,
   "layers_size": {
-    "id" : [600, 600, 600],
-    "sin": [700, 700, 700],
-    "cos": [700, 700, 700],
-    "mul": [600, 600, 600]
+    "id" : [400, 400, 400],
+    "sin": [600, 600, 600],
+    "cos": [600, 600, 600],
+    "mul": [300, 300, 300]
   },
   "nb_fc_layers": 2,
   "fc_layers_size": [500, 100]
