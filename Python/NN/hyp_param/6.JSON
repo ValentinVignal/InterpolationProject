@@ -1,0 +1,13 @@
+{
+  "name": "big model",
+  "description": "Neural network for big training",
+  "nb_layers" : 3,
+  "layers_size": {
+    "id" : [100, 100, 100],
+    "sin": [200, 200, 200],
+    "cos": [200, 200, 200],
+    "mul": [20, 50, 100]
+  },
+  "nb_fc_layers": 1,
+  "fc_layers_size": [50]
+}
