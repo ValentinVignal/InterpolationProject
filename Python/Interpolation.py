@@ -31,8 +31,8 @@ def main():
                         help='the size of the transition')
     parser.add_argument('--model', type=str, default='1',
                         help='The model of the Neural Network used for the interpolation')
-    parser.add_argument('--batch', type=int, default=2**16,
-                        help='The size of the batchs')
+    parser.add_argument('--batch', type=int, default=1,
+                        help='The number of the batchs')
     parser.add_argument('--small-cpu', action='store_true', default=False,
                         help='To work on small CPU')
 
@@ -100,20 +100,19 @@ def main():
 
     loss_tab = []
     nb_points = x_train.shape[0]
+    batch_size = int(ceil(nb_points/args.batch))
 
     # Train
     print('Start training')
     with tf.Session(config=tf.ConfigProto()) as sess:
         sess.run(tf.global_variables_initializer())
         for i in range(args.epochs):
-            j = 0
-            for b in range(0, nb_points, args.batch):
+            for b in range(0, nb_points, batch_size):
                 _, loss_value = sess.run([train_op, loss],
-                                         feed_dict={x: x_train[b: b + args.batch], y: y_train[b:b + args.batch]})
+                                         feed_dict={x: x_train[b: b + batch_size], y: y_train[b:b + batch_size]})
                 loss_tab.append(loss_value)
-                if j % args.log_interval == 0:
-                    print("Epoch {0} [{2}/{3}] -> Loss : {1}".format(i + 1, loss_value, b + args.batch, nb_points))
-                j += 1
+            if i % args.log_interval == 0:
+                print("Epoch {0} -> Loss : {1}".format(i + 1, loss_tab[-1]))
 
         predicted = sess.run([final_layer], feed_dict={x: x_test})
     print('Training Done')
@@ -178,10 +177,8 @@ def main():
     plt.savefig(os.path.join(path_to_save_folder, 'Prediction_' + save_name + '.png'))
 
     # Plot of prediction
-    nb_batchs = ceil(nb_points/args.batch)
-
     plt.figure()
-    plt.plot(np.arange(args.epochs * nb_batchs)/nb_batchs, loss_tab, color='crimson', label='Loss')
+    plt.plot(np.arange(args.epochs * args.batch)/args.batch, loss_tab, color='crimson', label='Loss')
     plt.xlabel('Epochs')
     plt.ylabel('Value')
     plt.title('Evolution of the value of the Loss function through the Epochs')
