@@ -35,6 +35,8 @@ def main():
                         help='The number of the batchs')
     parser.add_argument('--small-cpu', action='store_true', default=False,
                         help='To work on small CPU')
+    parser.add_argument('--gpu', type=str, default='0',
+                        help='What GPU to use')
 
     args = parser.parse_args()
     if args.small_cpu:
@@ -43,7 +45,7 @@ def main():
 
     path_data_folder = '../Data/data_' + args.data
 
-    tf.device('/device:GPU:0') if not args.no_cuda else None
+    tf.device('/device:GPU:' + args.gpu) if not args.no_cuda else None
 
     # The importation of the data
     path1 = os.path.join(path_data_folder, 'part_1.wav')
