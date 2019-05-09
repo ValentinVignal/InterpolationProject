@@ -7,5 +7,7 @@
     "sin": [50, 50],
     "cos": [50, 50],
     "mul": [50, 50]
-  }
+  },
+  "nb_fc_layers": 1,
+  "fc_layers_size": [50]
 }

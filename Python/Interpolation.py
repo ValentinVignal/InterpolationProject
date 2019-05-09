@@ -40,7 +40,7 @@ def main():
 
     args = parser.parse_args()
     if args.small_cpu:
-        args.batch = 2048
+        args.batch = 1000
         args.no_cuda = True
 
     path_data_folder = '../Data/data_' + args.data
@@ -92,15 +92,21 @@ def main():
             ], axis=1)
         )
 
+    # FC Layers
+    for i in range(model['nb_fc_layers']):
+        layers.append(tf.layers.dense(layers[-1], model['fc_layers_size'][i], activation=tf.nn.tanh))
+
     # Final Layer
     final_layer = tf.layers.dense(layers[-1], 1, activation=tf.nn.tanh)
 
     # Loss function and optimizer
-    loss = tf.reduce_mean(tf.losses.mean_squared_error(labels=y, predictions=final_layer))
+    loss = tf.reduce_sum(
+        tf.losses.mean_squared_error(labels=y, predictions=final_layer, reduction=tf.losses.Reduction.SUM))
     train_op = tf.train.AdamOptimizer(learning_rate=args.lr).minimize(loss)
     tf.set_random_seed(args.seed)
 
-    loss_tab = []
+    loss_batch = []
+    loss_epoch = []
     nb_points = x_train.shape[0]
     batch_size = int(ceil(nb_points/args.batch))
 
@@ -109,12 +115,15 @@ def main():
     with tf.Session(config=tf.ConfigProto()) as sess:
         sess.run(tf.global_variables_initializer())
         for i in range(args.epochs):
-            for b in range(0, nb_points, batch_size):
+            loss_epoch.append(0)
+            for b in range(args.batch):
                 _, loss_value = sess.run([train_op, loss],
-                                         feed_dict={x: x_train[b: b + batch_size], y: y_train[b:b + batch_size]})
-                loss_tab.append(loss_value)
+                                         feed_dict={x: x_train[b * batch_size: min((b + 1) * batch_size, nb_points)],
+                                                    y: y_train[b * batch_size: min((b + 1) * batch_size, nb_points)]})
+                loss_batch.append(loss_value)
+                loss_epoch[-1] += loss_value
             if i % args.log_interval == 0:
-                print("Epoch {0} -> Loss : {1}".format(i + 1, loss_tab[-1]))
+                print("Epoch {0} -> Loss : {1}".format(i + 1, loss_epoch[-1]))
 
         predicted = sess.run([final_layer], feed_dict={x: x_test})
     print('Training Done')
@@ -143,7 +152,7 @@ def main():
     # Save all the informations
     with open(os.path.join(path_to_save_folder, save_name + '.p'), 'wb') as dump_file:
         pickle.dump({
-            'loss': loss_tab,
+            'loss': loss_batch,
             'name': args.name,
             'epochs': args.epochs,
             'data': args.data,
@@ -179,13 +188,24 @@ def main():
     plt.savefig(os.path.join(path_to_save_folder, 'Prediction_' + save_name + '.png'))
 
     # Plot of prediction
-    plt.figure()
-    plt.plot(np.arange(args.epochs * args.batch)/args.batch, loss_tab, color='crimson', label='Loss')
-    plt.xlabel('Epochs')
-    plt.ylabel('Value')
-    plt.title('Evolution of the value of the Loss function through the Epochs')
+    color_batch = 'tab:blue'
+    color_epoch = 'tab:orange'
+    fig, ax_batch = plt.subplots()
+
+    ax_batch.set_xlabel('Epochs/Batchs')
+    ax_batch.set_ylabel('Loss Value (batch)', color=color_batch)
+    ax_batch.plot(np.arange(args.epochs * args.batch) / args.batch + 1, loss_batch, color=color_batch,
+                  label='Loss through the batchs')
+    ax_batch.tick_params(axis='y', labelcolor=color_batch)
+
+    ax_epoch = ax_batch.twinx()
+    ax_epoch.set_xlabel('Epochs/Batchs')
+    ax_epoch.set_ylabel('Loss Value (epochs)', color=color_epoch)
+    ax_epoch.plot(np.arange(1, args.epochs + 1), loss_epoch, color=color_epoch, label='Loss through the epochs')
+    ax_epoch.tick_params(axis='y', labelcolor=color_epoch)
+
+    plt.title('Evolution of the value of the Loss function\nthrough the Epochs and Batchs')
     plt.grid()
-    plt.legend()
     plt.savefig(os.path.join(path_to_save_folder, 'Loss_' + save_name + '.png'))
 
     # Save of the .wav file
