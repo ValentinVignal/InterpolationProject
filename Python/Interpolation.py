@@ -112,7 +112,9 @@ def main():
 
     # Train
     print('Start training')
-    with tf.Session(config=tf.ConfigProto()) as sess:
+    config = tf.ConfigProto()
+    config.gpu_option.allow_growth = True
+    with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
         for i in range(args.epochs):
             loss_epoch.append(0)
