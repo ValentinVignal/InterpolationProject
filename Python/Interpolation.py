@@ -105,7 +105,6 @@ def main():
     train_op = tf.train.AdamOptimizer(learning_rate=args.lr).minimize(loss)
     tf.set_random_seed(args.seed)
 
-    loss_batch = []
     loss_epoch = []
     nb_points = x_train.shape[0]
     batch_size = int(ceil(nb_points/args.batch))
@@ -122,7 +121,6 @@ def main():
                 _, loss_value = sess.run([train_op, loss],
                                          feed_dict={x: x_train[b * batch_size: min((b + 1) * batch_size, nb_points)],
                                                     y: y_train[b * batch_size: min((b + 1) * batch_size, nb_points)]})
-                loss_batch.append(loss_value)
                 loss_epoch[-1] += loss_value
             if i % args.log_interval == 0:
                 print("Epoch {0} -> Loss : {1}".format(i + 1, loss_epoch[-1]))
@@ -154,7 +152,7 @@ def main():
     # Save all the informations
     with open(os.path.join(path_to_save_folder, save_name + '.p'), 'wb') as dump_file:
         pickle.dump({
-            'loss': loss_batch,
+            'loss': loss_epoch,
             'name': args.name,
             'epochs': args.epochs,
             'data': args.data,
@@ -190,25 +188,18 @@ def main():
     plt.savefig(os.path.join(path_to_save_folder, 'Prediction_' + save_name + '.png'))
 
     # Plot of prediction
-    color_batch = 'tab:blue'
-    color_epoch = 'tab:orange'
-    fig, ax_batch = plt.subplots()
 
-    ax_batch.set_xlabel('Epochs/Batchs')
-    ax_batch.set_ylabel('Loss Value (batch)', color=color_batch)
-    ax_batch.plot(np.arange(args.epochs * args.batch) / args.batch + 1, loss_batch, color=color_batch,
-                  label='Loss through the batchs')
-    ax_batch.tick_params(axis='y', labelcolor=color_batch)
+    color_epoch = 'tab:blue'
+    plt.plot()
 
-    ax_epoch = ax_batch.twinx()
-    ax_epoch.set_xlabel('Epochs/Batchs')
-    ax_epoch.set_ylabel('Loss Value (epochs)', color=color_epoch)
-    ax_epoch.plot(np.arange(1, args.epochs + 1), loss_epoch, color=color_epoch, label='Loss through the epochs')
-    ax_epoch.tick_params(axis='y', labelcolor=color_epoch)
+    plt.plot(np.arange(1, args.epochs + 1), loss_epoch, color=color_epoch, label='Loss through the epochs')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
 
     plt.title('Evolution of the value of the Loss function\nthrough the Epochs and Batchs')
     plt.grid()
     plt.savefig(os.path.join(path_to_save_folder, 'Loss_' + save_name + '.png'))
+
 
     # Save of the .wav file
     lb.output.write_wav(os.path.join(path_to_save_folder, save_name + '.wav'), np.reshape(y_train, -1), sr1)
