@@ -21,7 +21,7 @@ def main():
                         help='disables CUDA training')
     parser.add_argument('--seed', type=int, default=1234, metavar='S',
                         help='random seed (default: 1234)')
-    parser.add_argument('--log-interval', type=int, default=100, metavar='N',
+    parser.add_argument('--log-interval', type=int, default=5, metavar='N',
                         help='how many batch to wait before logging training status')
     parser.add_argument('--name', default='',  # Optional, if we want ot name our model
                         help='The name of the model')
